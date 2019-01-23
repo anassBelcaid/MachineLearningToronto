@@ -30,7 +30,7 @@ def check_grad(func, X, epsilon, *args):
 
     dh = np.zeros((len(X), 1))
 
-    for j in xrange(len(X)):
+    for j in range(len(X)):
         dx = np.zeros((len(X), 1))
         dx[j] += epsilon
         y2 = func(X+dx, *args)[0]
@@ -38,7 +38,7 @@ def check_grad(func, X, epsilon, *args):
         y1 = func(X+dx, *args)[0]
         dh[j] = (y2 - y1)/(2*epsilon)
 
-    print np.hstack((dy, dh))          # print the two vectors
+    print(np.hstack((dy, dh)))          # print the two vectors
     d = LA.norm(dh-dy)/LA.norm(dh+dy)  # return norm of diff divided by norm of sum
 
     return d

@@ -17,8 +17,8 @@ def plot_digits(digit_array):
     examples_per_class = digit_array.shape[0]/2
     num_panes = int(np.ceil(float(examples_per_class)/CLASS_EXAMPLES_PER_PANE))
 
-    for pane in xrange(num_panes):
-        print "Displaying pane {}/{}".format(pane+1, num_panes)
+    for pane in range(num_panes):
+        print("Displaying pane {}/{}".format(pane+1, num_panes))
 
         top_start = pane*CLASS_EXAMPLES_PER_PANE
         top_end = min((pane+1)*CLASS_EXAMPLES_PER_PANE, examples_per_class)
@@ -36,7 +36,8 @@ def extract_digits(digit_array, start_index, end_index):
     """
 
     digits = []
-    for index in xrange(start_index, end_index):
+    start_index, end_index = int(start_index), int(end_index)
+    for index in range(start_index, end_index):
         digits.append(extract_digit_pixels(digit_array, index))
 
     return digits
@@ -52,7 +53,7 @@ def show_pane(top_digits, bottom_digits):
     """
 
     all_digits = top_digits + bottom_digits
-    fig, axes = plt.subplots(nrows = 2, ncols = len(all_digits)/2)
+    fig, axes = plt.subplots(nrows = 2, ncols = len(all_digits)//2)
     for axis, digit in zip(axes.reshape(-1), all_digits):
         axis.imshow(digit, interpolation='nearest', cmap=plt.gray())
         axis.axis('off')

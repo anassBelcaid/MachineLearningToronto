@@ -2,6 +2,7 @@
 
 import numpy as np
 from utils import sigmoid
+from scipy.special import xlogy
 
 def logistic_predict(weights, data):
     """
@@ -19,7 +20,12 @@ def logistic_predict(weights, data):
         y:          :N x 1 vector of probabilities. This is the output of the classifier.
     """
 
-    # TODO: Finish this function
+    #computing the linear transformation
+    y = np.dot(data,weights[:-1])+weights[-1]
+
+
+    #applying non linearities
+    y = sigmoid(y)
 
     return y
 
@@ -33,7 +39,17 @@ def evaluate(targets, y):
         ce           : (scalar) Cross entropy. CE(p, q) = E_p[-log q]. Here we want to compute CE(targets, y)
         frac_correct : (scalar) Fraction of inputs classified correctly.
     """
-    # TODO: Finish this function
+
+    #cross entropy loss
+    ce = xlogy(targets,y) + xlogy(1-targets,1-y)
+    ce = np.ma.masked_invalid(ce).sum()
+
+    #computed corrected correctly
+    prediction = np.zeros_like(targets)
+    prediction[y>0.5] = 1       # positivs
+
+    #fration correct
+    frac_correct = np.mean(prediction == targets) 
     
     return ce, frac_correct
 
@@ -59,8 +75,21 @@ def logistic(weights, data, targets, hyperparameters):
         y:       N x 1 vector of probabilities.
     """
 
-    # TODO: Finish this function
+    # Compute the probabilities
     y = logistic_predict(weights, data)
+
+
+    #evaluate the predictions
+    f, frac_correct = evaluate(targets, y)
+
+    #computing the gradient
+    df = np.zeros_like(weights)
+    
+    #error
+    error   = y - targets 
+    df[:-1] = np.dot(data.T,error)
+    df[-1]  = np.sum(error)
+
 
 
     return f, df, y

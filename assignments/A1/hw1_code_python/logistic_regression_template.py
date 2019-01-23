@@ -10,16 +10,14 @@ def run_logistic_regression():
 
     N, M = train_inputs.shape
 
-    # TODO: Set hyperparameters
     hyperparameters = {
-                    'learning_rate': ...,
-                    'weight_regularization': ...,
-                    'num_iterations': ...
+                    'learning_rate': 1e-2,\
+                    'weight_regularization': 0.1,\
+                    'num_iterations': 1000\
                  }
 
     # Logistic regression weights
-    # TODO:Initialize to random weights here.
-    weights = ...
+    weights = np.random.rand(M+1,1)
 
     # Verify that your logistic function produces the right gradient.
     # diff should be very close to 0.
@@ -27,7 +25,7 @@ def run_logistic_regression():
 
 
     # Begin learning with gradient descent
-    for t in xrange(hyperparameters['num_iterations']):
+    for t in range(hyperparameters['num_iterations']):
 
         # TODO: you may need to modify this loop to create plots, etc.
 
@@ -51,9 +49,9 @@ def run_logistic_regression():
         
         # print some stats
         print ("ITERATION:{:4d}  TRAIN NLOGL:{:4.2f}  TRAIN CE:{:.6f} "
-               "TRAIN FRAC:{:2.2f}  VALID CE:{:.6f}  VALID FRAC:{:2.2f}").format(
-                   t+1, f / N, cross_entropy_train, frac_correct_train*100,
-                   cross_entropy_valid, frac_correct_valid*100)
+               "TRAIN FRAC:{:2.2f}  VALID CE:{:.6f}  VALID FRAC:{:2.2f}".format(
+                   t+2, f / N, cross_entropy_train, frac_correct_train*100,
+                   cross_entropy_valid, frac_correct_valid*100))
 
 def run_check_grad(hyperparameters):
     """Performs gradient check on logistic function.
@@ -75,7 +73,7 @@ def run_check_grad(hyperparameters):
                       targets,
                       hyperparameters)
 
-    print "diff =", diff
+    print("diff =", diff)
 
 if __name__ == '__main__':
     run_logistic_regression()
