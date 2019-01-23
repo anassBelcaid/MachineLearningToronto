@@ -42,7 +42,7 @@ def evaluate(targets, y):
 
     #cross entropy loss
     ce = xlogy(targets,y) + xlogy(1-targets,1-y)
-    ce = np.ma.masked_invalid(ce).sum()
+    ce = -np.ma.masked_invalid(ce).sum()
 
     #computed corrected correctly
     prediction = np.zeros_like(targets)
@@ -117,5 +117,26 @@ def logistic_pen(weights, data, targets, hyperparameters):
     """
 
     # TODO: Finish this function
+    # Compute the probabilities
+    y = logistic_predict(weights, data)
+
+
+    #evaluate the predictions
+    f, frac_correct = evaluate(targets, y)
+
+    f+= 0.5* np.sum(weights[:-1]**2)
+
+    #computing the gradient
+    df = np.zeros_like(weights)
+    
+    #error
+    error   = y - targets 
+    df[:-1] = np.dot(data.T,error) + weights[:-1]
+    df[-1]  = np.sum(error)
+
+
+
+    return f, df, y
+
 
     return f, df, y

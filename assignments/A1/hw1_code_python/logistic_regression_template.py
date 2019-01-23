@@ -2,22 +2,25 @@ import numpy as np
 from check_grad import check_grad
 from utils import *
 from logistic import *
+import matplotlib.pyplot as plt
+
 
 def run_logistic_regression():
     train_inputs, train_targets = load_train()
-    #train_inputs, train_targets = load_train_small()
+    # train_inputs, train_targets = load_train_small()
     valid_inputs, valid_targets = load_valid()
+    test_inputs, test_targets = load_test()
 
     N, M = train_inputs.shape
 
     hyperparameters = {
-                    'learning_rate': 1e-2,\
-                    'weight_regularization': 0.1,\
-                    'num_iterations': 1000\
+                    'learning_rate': 2e-2,\
+                    'weight_regularization':1e3 ,\
+                    'num_iterations': 400\
                  }
 
     # Logistic regression weights
-    weights = np.random.rand(M+1,1)
+    weights = np.random.rand(M+1,1)/(M+1)
 
     # Verify that your logistic function produces the right gradient.
     # diff should be very close to 0.
@@ -25,12 +28,14 @@ def run_logistic_regression():
 
 
     # Begin learning with gradient descent
+    results = {}
+
     for t in range(hyperparameters['num_iterations']):
 
         # TODO: you may need to modify this loop to create plots, etc.
 
         # Find the negative log likelihood and its derivatives w.r.t. the weights.
-        f, df, predictions = logistic(weights, train_inputs, train_targets, hyperparameters)
+        f, df, predictions = logistic_pen(weights, train_inputs, train_targets, hyperparameters)
         
         # Evaluate the prediction.
         cross_entropy_train, frac_correct_train = evaluate(train_targets, predictions)
@@ -47,11 +52,26 @@ def run_logistic_regression():
         # Evaluate the prediction.
         cross_entropy_valid, frac_correct_valid = evaluate(valid_targets, predictions_valid)
         
+        #saving the accuracies
+        results[t]=(cross_entropy_train, cross_entropy_valid)
+
+
         # print some stats
         print ("ITERATION:{:4d}  TRAIN NLOGL:{:4.2f}  TRAIN CE:{:.6f} "
                "TRAIN FRAC:{:2.2f}  VALID CE:{:.6f}  VALID FRAC:{:2.2f}".format(
                    t+2, f / N, cross_entropy_train, frac_correct_train*100,
                    cross_entropy_valid, frac_correct_valid*100))
+
+    #plotting the cross entropy
+    data = np.array([(k, *results[k]) for k in results])
+    plt.plot(data[:,0],data[:,1],lw=2,label='train CE')
+    plt.plot(data[:,0],data[:,2],lw=2,label='valid CE')
+    plt.legend(loc='best')
+    plt.title('max valid acc=%.2f'%np.max(frac_correct_valid))
+    plt.show()
+
+
+
 
 def run_check_grad(hyperparameters):
     """Performs gradient check on logistic function.
@@ -66,7 +86,7 @@ def run_check_grad(hyperparameters):
     data    = np.random.randn(num_examples, num_dimensions)
     targets = np.random.rand(num_examples, 1)
 
-    diff = check_grad(logistic,      # function to check
+    diff = check_grad(logistic_pen,      # function to check
                       weights,
                       0.001,         # perturbation
                       data,
