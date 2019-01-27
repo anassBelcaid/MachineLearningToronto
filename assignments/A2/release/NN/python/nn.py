@@ -1,7 +1,8 @@
 from util import *
 import sys
 import matplotlib.pyplot as plt
-plt.ion()
+from run_knn import run_knn
+# plt.ion()
 
 def InitNN(num_inputs, num_hiddens, num_outputs):
   """Initializes NN parameters."""
@@ -38,7 +39,7 @@ def TrainNN(num_hiddens, eps, momentum, num_epochs):
   train_error = []
   valid_error = []
   num_train_cases = inputs_train.shape[1]
-  for epoch in xrange(num_epochs):
+  for epoch in range(num_epochs):
     # Forward prop
     h_input = np.dot(W1.T, inputs_train) + b1  # Input to hidden layer.
     h_output = 1 / (1 + np.exp(-h_input))  # Output of hidden layer.
@@ -46,7 +47,9 @@ def TrainNN(num_hiddens, eps, momentum, num_epochs):
     prediction = 1 / (1 + np.exp(-logit))  # Output prediction.
 
     # Compute cross entropy
-    train_CE = -np.mean(target_train * np.log(prediction) + (1 - target_train) * np.log(1 - prediction))
+    # train_CE = -np.mean(target_train * np.log(prediction) + (1 - target_train) * np.log(1 - prediction))
+    train_CE  = classfication_rate(inputs_train,target_train,W1,W2,b1,b2)
+
 
     # Compute deriv
     dEbydlogit = prediction - target_train
@@ -72,7 +75,8 @@ def TrainNN(num_hiddens, eps, momentum, num_epochs):
     b1 = b1 + db1
     b2 = b2 + db2
 
-    valid_CE = Evaluate(inputs_valid, target_valid, W1, W2, b1, b2)
+    # valid_CE = Evaluate(inputs_valid, target_valid, W1, W2, b1, b2)
+    valid_CE = classfication_rate(inputs_valid, target_valid, W1, W2, b1, b2)
 
     train_error.append(train_CE)
     valid_error.append(valid_CE)
@@ -84,8 +88,10 @@ def TrainNN(num_hiddens, eps, momentum, num_epochs):
   sys.stdout.write('\n')
   final_train_error = Evaluate(inputs_train, target_train, W1, W2, b1, b2)
   final_valid_error = Evaluate(inputs_valid, target_valid, W1, W2, b1, b2)
-  final_test_error = Evaluate(inputs_test, target_test, W1, W2, b1, b2)
-  print 'Error: Train %.5f Validation %.5f Test %.5f' % (final_train_error, final_valid_error, final_test_error)
+  # final_test_error = Evaluate(inputs_test, target_test, W1, W2, b1, b2)
+  final_test_error = classfication_rate(inputs_test, target_test,W1,W2,b1,b2)
+  print('Error: Train %.5f Validation %.5f Test %.5f' % (final_train_error,\
+      final_valid_error, final_test_error))
   return W1, W2, b1, b2, train_error, valid_error
 
 def Evaluate(inputs, target, W1, W2, b1, b2):
@@ -97,22 +103,41 @@ def Evaluate(inputs, target, W1, W2, b1, b2):
   CE = -np.mean(target * np.log(prediction) + (1 - target) * np.log(1 - prediction))
   return CE
 
+def classfication_rate(inputs, target, W1, W2, b1, b2):
+    """ Evaluat the classification  rate on the model"""
+
+    h_input = np.dot(W1.T, inputs) + b1  # Input to hidden layer.
+    h_output = 1 / (1 + np.exp(-h_input))  # Output of hidden layer.
+    logit = np.dot(W2.T, h_output) + b2  # Input to output layer.
+    prediction = 1 / (1 + np.exp(-logit))  # Output prediction.
+
+    #max prediction
+    prediction = (prediction <0.5)   #if proability higher than 0.5 class 1
+
+    return 1 - np.mean(prediction != target)
+
+    
+
 def DisplayErrorPlot(train_error, valid_error):
   plt.figure(1)
+  # plt.xkcd()
   plt.clf()
-  plt.plot(range(len(train_error)), train_error, 'b', label='Train')
-  plt.plot(range(len(valid_error)), valid_error, 'g', label='Validation')
+  plt.plot(range(len(train_error)), train_error, 'b', label='Train'\
+          , lw = 2)
+  plt.plot(range(len(valid_error)), valid_error,  'g',label='Validation'\
+          ,lw = 2)
   plt.xlabel('Epochs')
-  plt.ylabel('Cross entropy')
+  plt.ylabel('classification rate')
   plt.legend()
   plt.draw()
-  raw_input('Press Enter to exit.')
+  plt.savefig("classification_rate_Q2_2.png")
+  input('Press Enter to exit.')
 
 def SaveModel(modelfile, W1, W2, b1, b2, train_error, valid_error):
   """Saves the model to a numpy file."""
   model = {'W1': W1, 'W2' : W2, 'b1' : b1, 'b2' : b2,
            'train_error' : train_error, 'valid_error' : valid_error}
-  print 'Writing model to %s' % modelfile
+  print('Writing model to %s' % modelfile)
   np.savez(modelfile, **model)
 
 def LoadModel(modelfile):
@@ -121,10 +146,11 @@ def LoadModel(modelfile):
   return model['W1'], model['W2'], model['b1'], model['b2'], model['train_error'], model['valid_error']
 
 def main():
-  num_hiddens = 10
-  eps = 0.1
-  momentum = 0.0
-  num_epochs = 1000
+  num_hiddens = 2
+  eps = 0.02
+  momentum = 0.9
+  # num_epochs = 1000
+  num_epochs = 30
   W1, W2, b1, b2, train_error, valid_error = TrainNN(num_hiddens, eps, momentum, num_epochs)
   DisplayErrorPlot(train_error, valid_error) 
   # If you wish to save the model for future use :
@@ -132,4 +158,26 @@ def main():
   # SaveModel(outputfile, W1, W2, b1, b2, train_error, valid_error)
 
 if __name__ == '__main__':
-  main()
+
+  num_hiddens = 10
+  eps = 0.02
+  momentum = 0.5
+  num_epochs = 1000 
+  K = 10   # number of nearest neighbors
+  W1, W2, b1, b2, train_error, valid_error = TrainNN(num_hiddens, eps, momentum, num_epochs)
+
+  inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = LoadData('digits.npz')
+
+  knn_valid_target =\
+  run_knn(K,inputs_train.T,target_train.T,inputs_valid.T).squeeze()
+  knn_test_target =\
+  run_knn(K,inputs_train.T,target_train.T,inputs_test.T).squeeze()
+
+  knn_valid_error = 1- np.mean(knn_valid_target==target_valid)
+  knn_test_error = 1- np.mean(knn_test_target==target_test)
+
+  print("{:2d}-NN valiation error={:4.2f},\
+          test error={:4.2f}".format(K,knn_valid_error,knn_test_error))
+   
+  # representation
+  DisplayErrorPlot(train_error, valid_error) 
