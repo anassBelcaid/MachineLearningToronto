@@ -29,7 +29,9 @@ def mogEM(x, K, iters, minVary=0):
  
   # Change the initializaiton with Kmeans here
   #--------------------  Add your code here --------------------  
-  mu = mn + np.random.randn(N, K) * (np.sqrt(vr) / randConst)
+  # mu = mn + np.random.randn(N, K) * (np.sqrt(vr) / randConst)
+  mu = KMeans(x, K, 5)
+  
   
   #------------------------------------------------------------  
   vary = vr * np.ones((1, K)) * 2
@@ -38,7 +40,7 @@ def mogEM(x, K, iters, minVary=0):
   logProbX = np.zeros((iters, 1))
 
   # Do iters iterations of EM
-  for i in xrange(iters):
+  for i in range(iters):
     # Do the E step
     respTot = np.zeros((K, 1))
     respX = np.zeros((N, K))
@@ -47,7 +49,7 @@ def mogEM(x, K, iters, minVary=0):
     ivary = 1 / vary
     logNorm = np.log(p) - 0.5 * N * np.log(2 * np.pi) - 0.5 * np.sum(np.log(vary), axis=0).reshape(-1, 1)
     logPcAndx = np.zeros((K, T))
-    for k in xrange(K):
+    for k in range(K):
       dis = (x - mu[:,k].reshape(-1, 1))**2
       logPcAndx[k, :] = logNorm[k] - 0.5 * np.sum(ivary[:,k].reshape(-1, 1) * dis, axis=0)
     
@@ -59,7 +61,7 @@ def mogEM(x, K, iters, minVary=0):
     logProb = np.log(Px) + mx
     logProbX[i] = np.sum(logProb)
 
-    print 'Iter %d logProb %.5f' % (i, logProbX[i])
+    print('Iter %d logProb %.5f' % (i, logProbX[i]))
 
     # Plot log prob of data
     plt.figure(1);
@@ -73,7 +75,7 @@ def mogEM(x, K, iters, minVary=0):
     respTot = np.mean(PcGivenx, axis=1).reshape(-1, 1)
     respX = np.zeros((N, K))
     respDist = np.zeros((N,K))
-    for k in xrange(K):
+    for k in range(K):
       respX[:, k] = np.mean(x * PcGivenx[k,:].reshape(1, -1), axis=1)
       respDist[:, k] = np.mean((x - mu[:,k].reshape(-1, 1))**2 * PcGivenx[k,:].reshape(1, -1), axis=1)
 
@@ -91,7 +93,7 @@ def mogLogProb(p, mu, vary, x):
   N, T = x.shape
   ivary = 1 / vary
   logProb = np.zeros(T)
-  for t in xrange(T):
+  for t in range(T):
     # Compute log P(c)p(x|c) and then log p(x)
     logPcAndx = np.log(p) - 0.5 * N * np.log(2 * np.pi) \
         - 0.5 * np.sum(np.log(vary), axis=0).reshape(-1, 1) \
@@ -108,44 +110,92 @@ def q3():
   # Train a MoG model with 20 components on all 600 training
   # vectors, with both original initialization and kmeans initialization.
   #------------------- Add your code here ---------------------
+  print("without initialization")
+  K = 20
+  p, mu, vary, log = mogEM(inputs_train, K, iters,minVary)
+  # plt.savefig("mog_with_initialization.png")
 
-  raw_input('Press Enter to continue.')
+
+  #Now with k means 
+
+  
+
+  input('Press Enter to continue.')
 def q4():
   iters = 10
   minVary = 0.01
-  errorTrain = np.zeros(4)
-  errorTest = np.zeros(4)
-  errorValidation = np.zeros(4)
-  print(errorTrain)
-  numComponents = np.array([2, 5, 15, 25])
+  numComponents = np.array([2,3, 5,10, 13,15,20,23, 25])
+  L = len(numComponents)
+  errorTrain = np.zeros(L)
+  errorTest = np.zeros(L)
+  errorValidation = np.zeros(L)
   T = numComponents.shape[0]  
   inputs_train, inputs_valid, inputs_test, target_train, target_valid, target_test = LoadData('digits.npz')
   train2, valid2, test2, target_train2, target_valid2, target_test2 = LoadData('digits.npz', True, False)
   train3, valid3, test3, target_train3, target_valid3, target_test3 = LoadData('digits.npz', False, True)
   
-  for t in xrange(T): 
+  for t in range(T): 
     K = numComponents[t]
     # Train a MoG model with K components for digit 2
     #-------------------- Add your code here --------------------------------
+    p2, mu2, vary2, log2 = mogEM(train2, K, iters,minVary)
 
     
     # Train a MoG model with K components for digit 3
     #-------------------- Add your code here --------------------------------
+    p3, mu3, vary3, log3 = mogEM(train3, K, iters,minVary)
 
     
     # Caculate the probability P(d=1|x) and P(d=2|x),
     # classify examples, and compute error rate
     # Hints: you may want to use mogLogProb function
     #-------------------- Add your code here --------------------------------
+    ###########################################################################
+    #                               Test error                                #
+    ###########################################################################
+    classification = np.zeros((inputs_test.shape[1],2))
+    #probabilities for the twos
+    classification[:,0] = mogLogProb(p2,mu2,vary2,inputs_test)
+    #probabilities for threes
+    classification[:,1] = mogLogProb(p3,mu3,vary3,inputs_test)
+    #taking the maximum probability
+    classification  = np.argmax(classification,axis=1)
+    errorTest[t] = 1-np.mean(classification==target_test) 
     
-    
+    ###########################################################################
+    #                               Train error                                #
+    ###########################################################################
+    classification = np.zeros((inputs_train.shape[1],2))
+    #probabilities for the twos
+    classification[:,0] = mogLogProb(p2,mu2,vary2,inputs_train)
+    #probabilities for threes
+    classification[:,1] = mogLogProb(p3,mu3,vary3,inputs_train)
+    #taking the maximum probability
+    classification  = np.argmax(classification,axis=1)
+    errorTrain[t] = 1-np.mean(classification==target_train) 
+
+    ###########################################################################
+    #                               Valid error                                #
+    ###########################################################################
+    classification = np.zeros((inputs_valid.shape[1],2))
+    #probabilities for the twos
+    classification[:,0] = mogLogProb(p2,mu2,vary2,inputs_valid)
+    #probabilities for threes
+    classification[:,1] = mogLogProb(p3,mu3,vary3,inputs_valid)
+    #taking the maximum probability
+    classification  = np.argmax(classification,axis=1)
+    errorValidation[t] = 1-np.mean(classification==target_valid) 
   # Plot the error rate
   plt.clf()
   #-------------------- Add your code here --------------------------------
+  plt.plot(numComponents, errorTest,label='test')
+  plt.plot(numComponents, errorTrain,label='train')
+  plt.plot(numComponents, errorValidation,label='valid')
+  plt.legend(loc='best')
   
 
   plt.draw()
-  raw_input('Press Enter to continue.')
+  input('Press Enter to continue.')
 
 def q5():
   # Choose the best mixture of Gaussian classifier you have, compare this
@@ -158,10 +208,10 @@ def q5():
   # Show the error rate comparison.
   #-------------------- Add your code here --------------------------------
 
-  raw_input('Press Enter to continue.')
+  input('Press Enter to continue.')
 
 if __name__ == '__main__':
-  q3()
+  # q3()
   q4()
-  q5()
+  # q5()
 

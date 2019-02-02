@@ -143,6 +143,48 @@ Try $k$-NN on this digit classification task using the code developed in the fir
 
 We obtain a similar error $2\%$ with $k=10$. This error increases with a higher $k$.
 
+
+# Mixture of Gaussians
+
+
+## Training
+
+
+Train your model on the **train2** and **train3**, which contains training examples of handwritten *two* and *threes* [^6].
+
+
+## Initializing a s mixture of Gaussians with $k$-means
+
+Training a MoG model with many  components tends to be slow. People have found that the means of the mixture components by running a few iterations  of the $k$-means tends to **speed** up the convergence. You should experiment this method of initialisation. You should do the following.
+
+* Read and understand the methods in the `kmeans.py` module.
+* Change the *initialisation* of the means in `mogEm.py` to use the $k$-means algorithm [^7]
+
+Here is the result of the **moG** without proper initialization
+
+
+![img3](data/mog_without_initialization.png){#id .marginfigure width=13cm height=4cm }
+
+
+Now we change the means initialisation with $k$-means.
+
+```python
+#--------------------  Add your code here --------------
+# mu = mn + np.random.randn(N, K) * (np.sqrt(vr)/randConst)
+mu = KMeans(x, 2, 5)
+```
+
+
+![img4](data/mog_with_initialization.png){#id .marginfigure width=13cm height=4cm }
+
+
+We could see that with proper *initialization* we achieve a higher value for the **log likelihood**.
+
+
+## Classification using MoGs
+
+Now we will investigate using the trained mixture models for classification. The goal is to decide which digits class $d$ a new input image $x$ belong to.
+
 [^1]: This turns out to be a **binary** classification problem instead of $K$ classes.
 
 [^2]: grayscale, not RGB
@@ -151,3 +193,9 @@ We obtain a similar error $2\%$ with $k=10$. This error increases with a higher 
 [^4]: You should use two values {2,5} which are smaller than the original two others {30,100}
 
 [^5]: I'm intrigued to use *scikit-learn*.
+
+[^6]: Try different values for number of mixtures and minimum variance.
+
+
+[^7]: Use $5$ iterations for the $k$-means.
+

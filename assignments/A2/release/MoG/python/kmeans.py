@@ -26,11 +26,11 @@ def KMeans(x, K, iters):
   np.random.shuffle(perm)
   means = x[:, perm[:K]]
   dist = np.zeros((K, N))
-  for iter in xrange(iters):
-    for k in xrange(K):
+  for iter in range(iters):
+    for k in range(K):
       dist[k, :] = distmat(means[:, k].reshape(-1, 1), x)
     assigned_class = np.argmin(dist, axis=0)
-    for k in xrange(K):
+    for k in range(K):
       means[:, k] = np.mean(x[:, (assigned_class == k).nonzero()[0]], axis=1)
 
   return means
@@ -39,11 +39,11 @@ def ShowMeans(means):
   """Show the cluster centers as images."""
   plt.figure(1)
   plt.clf()
-  for i in xrange(means.shape[1]):
+  for i in range(means.shape[1]):
     plt.subplot(1, means.shape[1], i+1)
     plt.imshow(means[:, i].reshape(16, 16).T, cmap=plt.cm.gray)
   plt.draw()
-  raw_input('Press Enter.')
+  input('Press Enter.')
 
 def main():
   K = 2
